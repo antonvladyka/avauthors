@@ -1,0 +1,134 @@
+\NeedsTeXFormat{LaTeX2e}[1994/06/01]
+\ProvidesPackage{avauthors}[2015/09/20 Authors and Affiliations]
+\RequirePackage{etoolbox}
+\RequirePackage{xstring}
+\RequirePackage{tikz}
+
+\newcommand{\avsuper}[1]{%
+         \arabic{#1}%
+    }
+%% 'sans serif' option
+\newif\if@alph
+\@alphfalse
+
+\DeclareOption{alph}{
+    \@alphtrue%
+    \renewcommand{\avsuper}[1]{%
+        \alph{#1}%
+    }%
+}
+\DeclareOption{fn}{
+    \renewcommand{\avsuper}[1]{%
+         \fnsymbol{#1}%
+    }%
+}
+\DeclareOption{roman}{
+    \renewcommand{\avsuper}[1]{
+         \roman{#1}%
+    }
+}
+\DeclareRobustCommand*\superscript[1]{%
+  \@superscript{\selectfont#1}%
+}
+
+\def\@superscript#1{%
+   \if@alph
+      {\m@th\ensuremath{^{\textit{\mbox{\fontsize\sf@size\z@#1}}}}}%
+   \else
+      {\m@th\ensuremath{^{\mbox{\fontsize\sf@size\z@#1}}}}%
+   \fi
+}
+
+%% Global indentation option
+
+%\ExecuteOptions{arabic}
+
+\ProcessOptions\relax
+
+
+\newcounter{avnumauthor}
+\newcounter{avnumaffil}
+\newcounter{avnumauthaffil}
+\newcounter{avnumaffils}
+\newcounter{avaffilindex}
+\newcommand{\tmptext}{}
+\newcommand{\tmpt}{}
+\newcounter{avcounta}
+\newcounter{avcntb}
+\newcounter{avcntc}
+
+\renewcommand{\author}[1]{
+    \stepcounter{avnumauthor}
+    %Author no. \theavnumauthor{} ``#1'' added\\
+    \setcounter{avnumaffil}{0}
+    \listadd{\authors}{#1}
+    \csdef{author\theavnumauthor}{#1}
+}
+\newcommand{\affiliation}[1]{
+    \stepcounter{avnumaffils}
+    \stepcounter{avnumaffil}
+    \stepcounter{avaffilindex}
+    \stepcounter{avnumauthaffil}
+    \foreach \i in {1,...,\theavaffilindex}{
+        \setcounter{avcounta}{\i}
+        %Comparing `\csuse{affil\theavcounta}' and `#1':
+            \IfStrEq
+                {\csuse{affil\theavcounta}}
+                {#1}
+                {\setcounter{avaffilindex}{\theavcounta}
+                    \addtocounter{avnumaffils}{-1}
+                }
+                {}
+    }
+    %Affiliation ``#1'' (No. \theavaffilindex) added as affil. no. \theavnumaffil \ for the author No. \theavnumauthor\\
+    \csxdef{affil\theavaffilindex}{#1}
+    \csxdef{affindex\theavnumauthaffil}{\theavaffilindex}
+    \csxdef{auth\theavnumauthor}{\theavnumaffil}
+    \setcounter{avaffilindex}{\theavnumaffils}
+}
+\newcommand{\getaffilnum}[1]{
+    \csuse{auth#1}
+}
+\newcommand{\getaffilname}[1]{
+    \csuse{affil#1}
+}
+\newcommand{\processall}{
+    \setcounter{avcounta}{0}
+    \foreach \i in {1,...,\theavnumauthor}{
+        \stepcounter{avcntb}
+        %\csuse{author\theavcntb}%
+        \csxdef{tmpb}{}%
+        \renewcommand{\tmpt}{}
+        \foreach \j in {1,...,\csuse{auth\theavcntb}}{%
+            \stepcounter{avcounta}%
+            \setcounter{avcntc}{\csuse{affindex\theavcounta}}
+            \csxdef{tmpb}{\csuse{tmpb}\avsuper{avcntc}}
+            \ifnum \j < \csuse{auth\theavcntb}
+                \csxdef{tmpb}{\csuse{tmpb},}
+            \fi
+        }%
+        \renewcommand{\tmptext}{\csuse{tmpb}}
+        \csxdef{authfa\theavcntb}{\tmptext}
+    }
+}
+\newcommand{\printauthor}[1]{
+    \csuse{author#1}\superscript{\csuse{authfa#1}}%
+}
+\newcommand{\printaffil}[1]{
+    \setcounter{avcntb}{#1}%
+    \superscript{\avsuper{avcntb}}\csuse{affil#1}
+}
+
+%\csuse{authf1}
+%\csuse{authf2}
+%\csuse{authf3}
+
+%\csuse{affilf1}
+%\csuse{affilf2}
+%\csuse{affilf3}
+%\csuse{affilf4}
+
+
+
+
+\endinput
